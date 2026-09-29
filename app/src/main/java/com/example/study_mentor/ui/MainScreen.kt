@@ -70,7 +70,9 @@ fun MainScreen() {
         ) {
             composable("home") { HomeScreen() }
             composable("practice") { PlaceholderScreen("Practice Screen") }
-            composable("ask_ai") { PlaceholderScreen("Ask AI Screen") }
+            composable("ask_ai") { 
+                CameraScannerScreen(onBackClick = { navController.popBackStack() }) 
+            }
             composable("library") { PlaceholderScreen("Library Screen") }
             composable("profile") { PlaceholderScreen("Profile Screen") }
         }
