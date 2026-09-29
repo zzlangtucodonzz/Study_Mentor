@@ -68,7 +68,7 @@ fun MainScreen() {
             startDestination = "home",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("home") { PlaceholderScreen("Home Screen") }
+            composable("home") { HomeScreen() }
             composable("practice") { PlaceholderScreen("Practice Screen") }
             composable("ask_ai") { PlaceholderScreen("Ask AI Screen") }
             composable("library") { PlaceholderScreen("Library Screen") }
