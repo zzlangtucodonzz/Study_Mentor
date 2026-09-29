@@ -1,19 +1,21 @@
 package com.example.study_mentor.ui
 
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -25,8 +27,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,28 +45,9 @@ fun MainScreen() {
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(navController = navController)
+            BottomBarWithFab(navController = navController)
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    navController.navigate("ask_ai") {
-                        popUpTo(navController.graph.startDestinationId)
-                        launchSingleTop = true
-                    }
-                },
-                containerColor = PrimaryBlue,
-                contentColor = Color.White,
-                shape = CircleShape
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Ask AI",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        },
-        floatingActionButtonPosition = FabPosition.Center
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -73,114 +59,169 @@ fun MainScreen() {
             composable("ask_ai") { 
                 CameraScannerScreen(onBackClick = { navController.popBackStack() }) 
             }
-            composable("library") { PlaceholderScreen("Library Screen") }
-            composable("profile") { PlaceholderScreen("Profile Screen") }
+            composable("library") { LibraryScreen() }
+            composable("profile") { ProfileScreen() }
         }
     }
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavHostController) {
+fun BottomBarWithFab(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 8.dp
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = currentRoute == "home",
+        // The actual Bottom Navigation Bar
+        NavigationBar(
+            containerColor = Color.White,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .shadow(
+                    elevation = 16.dp, 
+                    spotColor = Color.Black.copy(alpha = 0.1f), 
+                    ambientColor = Color.Black.copy(alpha = 0.1f)
+                ),
+            tonalElevation = 0.dp // Ensure it's pure white without surface tint
+        ) {
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                label = { Text("Home", fontWeight = FontWeight.Medium) },
+                selected = currentRoute == "home",
+                onClick = {
+                    if (currentRoute != "home") {
+                        navController.navigate("home") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = PrimaryBlue,
+                    selectedTextColor = PrimaryBlue,
+                    unselectedIconColor = Color.Gray,
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = Color.Transparent
+                )
+            )
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Create, contentDescription = "Practice") },
+                label = { Text("Practice", fontWeight = FontWeight.Medium) },
+                selected = currentRoute == "practice",
+                onClick = {
+                    if (currentRoute != "practice") {
+                        navController.navigate("practice") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = PrimaryBlue,
+                    selectedTextColor = PrimaryBlue,
+                    unselectedIconColor = Color.Gray,
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = Color.Transparent
+                )
+            )
+            // Center empty space for FAB and Label
+            NavigationBarItem(
+                icon = { Box(modifier = Modifier.height(24.dp)) }, // Placeholder space for the floating icon above it
+                label = { 
+                    Text(
+                        text = "Ask AI", 
+                        fontSize = 12.sp, 
+                        fontWeight = FontWeight.Medium
+                    ) 
+                },
+                selected = currentRoute == "ask_ai",
+                onClick = {
+                    if (currentRoute != "ask_ai") {
+                        navController.navigate("ask_ai") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = PrimaryBlue,
+                    selectedTextColor = PrimaryBlue,
+                    unselectedIconColor = Color.Transparent, // Hidden behind FAB
+                    unselectedTextColor = PrimaryBlue, // Keep it blue to indicate the primary action
+                    indicatorColor = Color.Transparent
+                )
+            )
+            NavigationBarItem(
+                icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Library") },
+                label = { Text("Library", fontWeight = FontWeight.Medium) },
+                selected = currentRoute == "library",
+                onClick = {
+                    if (currentRoute != "library") {
+                        navController.navigate("library") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = PrimaryBlue,
+                    selectedTextColor = PrimaryBlue,
+                    unselectedIconColor = Color.Gray,
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = Color.Transparent
+                )
+            )
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                label = { Text("Profile", fontWeight = FontWeight.Medium) },
+                selected = currentRoute == "profile",
+                onClick = {
+                    if (currentRoute != "profile") {
+                        navController.navigate("profile") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = PrimaryBlue,
+                    selectedTextColor = PrimaryBlue,
+                    unselectedIconColor = Color.Gray,
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = Color.Transparent
+                )
+            )
+        }
+
+        // The overlapping FAB
+        FloatingActionButton(
             onClick = {
-                if (currentRoute != "home") {
-                    navController.navigate("home") {
+                if (currentRoute != "ask_ai") {
+                    navController.navigate("ask_ai") {
                         popUpTo(navController.graph.startDestinationId)
                         launchSingleTop = true
                     }
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = PrimaryBlue,
-                selectedTextColor = PrimaryBlue,
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color.Transparent
+            containerColor = PrimaryBlue,
+            contentColor = Color.White,
+            shape = CircleShape,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 8.dp,
+                pressedElevation = 12.dp
+            ),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = (-22).dp) // Adjust to overlap the top edge of the NavigationBar
+                .size(64.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = "Ask AI",
+                modifier = Modifier.size(32.dp)
             )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Create, contentDescription = "Practice") },
-            label = { Text("Practice") },
-            selected = currentRoute == "practice",
-            onClick = {
-                if (currentRoute != "practice") {
-                    navController.navigate("practice") {
-                        popUpTo(navController.graph.startDestinationId)
-                        launchSingleTop = true
-                    }
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = PrimaryBlue,
-                selectedTextColor = PrimaryBlue,
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
-        // Center empty space for FAB
-        NavigationBarItem(
-            icon = { },
-            label = { },
-            selected = false,
-            onClick = { },
-            enabled = false,
-            colors = NavigationBarItemDefaults.colors(
-                disabledIconColor = Color.Transparent,
-                disabledTextColor = Color.Transparent,
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Library") },
-            label = { Text("Library") },
-            selected = currentRoute == "library",
-            onClick = {
-                if (currentRoute != "library") {
-                    navController.navigate("library") {
-                        popUpTo(navController.graph.startDestinationId)
-                        launchSingleTop = true
-                    }
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = PrimaryBlue,
-                selectedTextColor = PrimaryBlue,
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = { Text("Profile") },
-            selected = currentRoute == "profile",
-            onClick = {
-                if (currentRoute != "profile") {
-                    navController.navigate("profile") {
-                        popUpTo(navController.graph.startDestinationId)
-                        launchSingleTop = true
-                    }
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = PrimaryBlue,
-                selectedTextColor = PrimaryBlue,
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
+        }
     }
 }
 
