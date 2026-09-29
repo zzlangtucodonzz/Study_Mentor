@@ -69,7 +69,7 @@ fun MainScreen() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("home") { HomeScreen() }
-            composable("practice") { PlaceholderScreen("Practice Screen") }
+            composable("practice") { PracticeScreen() }
             composable("ask_ai") { 
                 CameraScannerScreen(onBackClick = { navController.popBackStack() }) 
             }
