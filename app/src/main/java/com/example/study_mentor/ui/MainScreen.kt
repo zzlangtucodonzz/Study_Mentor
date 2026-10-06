@@ -37,15 +37,25 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.study_mentor.ui.theme.PrimaryBlue
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    authViewModel: AuthViewModel = viewModel()
+) {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val hideBottomBarRoutes = listOf("login", "register")
+    val shouldShowBottomBar = currentRoute !in hideBottomBarRoutes
 
     Scaffold(
         bottomBar = {
-            BottomBarWithFab(navController = navController)
+            if (shouldShowBottomBar) {
+                BottomBarWithFab(navController = navController)
+            }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
@@ -60,7 +70,47 @@ fun MainScreen() {
                 CameraScannerScreen(onBackClick = { navController.popBackStack() }) 
             }
             composable("library") { LibraryScreen() }
-            composable("profile") { ProfileScreen() }
+            composable("profile") { 
+                ProfileScreen(
+                    onNavigateToLogin = { navController.navigate("login") },
+                    onNavigateToRegister = { navController.navigate("register") },
+                    viewModel = authViewModel
+                ) 
+            }
+            composable("login") {
+                LoginScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToRegister = { 
+                        navController.navigate("register") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    },
+                    onAuthSuccess = {
+                        navController.navigate("profile") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    },
+                    viewModel = authViewModel
+                )
+            }
+            composable("register") {
+                RegisterScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToLogin = { 
+                        navController.navigate("login") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    },
+                    onAuthSuccess = {
+                        navController.navigate("profile") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    },
+                    viewModel = authViewModel
+                )
+            }
         }
     }
 }
