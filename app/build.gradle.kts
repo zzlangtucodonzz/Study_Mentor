@@ -76,6 +76,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     // OpenAI Kotlin client (unofficial, by Mouaad Aallam) — works with any sk- API key
     implementation("com.aallam.openai:openai-client:3.8.2")

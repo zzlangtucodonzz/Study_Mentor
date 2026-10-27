@@ -42,7 +42,9 @@ import com.example.study_mentor.ui.theme.PrimaryBlue
 
 @Composable
 fun MainScreen(
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    chatViewModel: ChatViewModel = viewModel(),
+    libraryViewModel: LibraryViewModel = viewModel()
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -67,9 +69,27 @@ fun MainScreen(
             composable("home") { HomeScreen() }
             composable("practice") { PracticeScreen() }
             composable("ask_ai") { 
-                CameraScannerScreen(onBackClick = { navController.popBackStack() }) 
+                CameraScannerScreen(
+                    onBackClick = { navController.popBackStack() },
+                    chatViewModel = chatViewModel
+                ) 
             }
-            composable("library") { LibraryScreen() }
+            composable("library") { 
+                LibraryScreen(
+                    authViewModel = authViewModel,
+                    libraryViewModel = libraryViewModel,
+                    onSessionClick = { sessionId ->
+                        chatViewModel.loadSession(sessionId)
+                        navController.navigate("ask_ai") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate("login")
+                    }
+                ) 
+            }
             composable("profile") { 
                 ProfileScreen(
                     onNavigateToLogin = { navController.navigate("login") },

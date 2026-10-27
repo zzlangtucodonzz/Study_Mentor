@@ -9,6 +9,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.study_mentor.OpenAIApiClient
+import com.example.study_mentor.data.ChatMessage
+import com.example.study_mentor.data.ChatSession
+import com.example.study_mentor.data.FirestoreChatRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,17 +21,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 
-// ─── Data Models ────────────────────────────────────────────────────────────
+// Expose typealias for backward compatibility if referenced from UI package
+typealias ChatMessage = com.example.study_mentor.data.ChatMessage
 
-/**
- * Represents a single message in the chat thread.
- * @param role  Either "user" or "ai".
- * @param text  The message content.
- */
-data class ChatMessage(
-    val role: String,
-    val text: String
-)
+// ─── UI State ───────────────────────────────────────────────────────────────
 
 /**
  * The complete UI state for the chat screen.
@@ -36,23 +33,56 @@ data class ChatMessage(
  * @param errorMessage        Non-null when the last API call encountered an error.
  * @param selectedImageUri    URI of the image chosen from gallery for preview.
  * @param selectedImageBase64 Compressed Base64 representation of the selected image.
+ * @param currentSessionId    ID of the active Firestore chat session, or null if new.
  */
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val selectedImageUri: Uri? = null,
-    val selectedImageBase64: String? = null
+    val selectedImageBase64: String? = null,
+    val currentSessionId: String? = null
 )
 
 // ─── ViewModel ───────────────────────────────────────────────────────────────
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val repository: FirestoreChatRepository = FirestoreChatRepository()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
     private var isStreaming = false
+
+    /**
+     * Loads an existing chat session's messages from Firestore.
+     */
+    fun loadSession(sessionId: String) {
+        val uid = auth.currentUser?.uid ?: return
+        _uiState.update { it.copy(currentSessionId = sessionId, isLoading = true, errorMessage = null) }
+        viewModelScope.launch {
+            repository.getMessagesForSession(uid, sessionId).collect { messages ->
+                _uiState.update { it.copy(messages = messages, isLoading = false) }
+            }
+        }
+    }
+
+    /**
+     * Resets the active session so the next message initiates a fresh session.
+     */
+    fun startNewChat() {
+        _uiState.update {
+            it.copy(
+                currentSessionId = null,
+                messages = emptyList(),
+                errorMessage = null,
+                selectedImageUri = null,
+                selectedImageBase64 = null
+            )
+        }
+    }
 
     /**
      * Handles gallery image selection. Decodes the image, downscales it to max 1024x1024,
@@ -148,7 +178,7 @@ class ChatViewModel : ViewModel() {
 
     /**
      * Sends a user prompt to the AI and streams the reply token-by-token
-     * into the UI state in real time.
+     * into the UI state in real time, persisting messages to Cloud Firestore.
      *
      * @param prompt  The question or instruction typed by the user.
      */
@@ -169,7 +199,11 @@ class ChatViewModel : ViewModel() {
         }
 
         // 1. Immediately append the user message and start the thinking indicator
-        val userMessage = ChatMessage(role = "user", text = bubbleText)
+        val userMessage = ChatMessage(
+            role = "user",
+            text = bubbleText,
+            timestamp = System.currentTimeMillis()
+        )
         _uiState.update { current ->
             current.copy(
                 messages = current.messages + userMessage,
@@ -182,6 +216,32 @@ class ChatViewModel : ViewModel() {
             isStreaming = true
             var isFirstChunk = true
             val responseBuilder = StringBuilder()
+            val uid = auth.currentUser?.uid
+
+            // Auto-create a session in Firestore if currentSessionId is null
+            var activeSessionId = _uiState.value.currentSessionId
+            if (activeSessionId == null && uid != null) {
+                try {
+                    val sessionTitle = if (trimmedPrompt.isNotBlank()) {
+                        trimmedPrompt.split("\\s+".toRegex()).take(5).joinToString(" ")
+                    } else {
+                        "New Image Chat"
+                    }
+                    activeSessionId = repository.createNewSession(uid, sessionTitle)
+                    _uiState.update { it.copy(currentSessionId = activeSessionId) }
+                } catch (e: Exception) {
+                    Log.e("ChatViewModel", "Failed to create session in Firestore", e)
+                }
+            }
+
+            // Save user message to Firestore
+            if (uid != null && activeSessionId != null) {
+                try {
+                    repository.saveMessage(uid, activeSessionId, userMessage)
+                } catch (e: Exception) {
+                    Log.e("ChatViewModel", "Failed to save user message to Firestore", e)
+                }
+            }
 
             try {
                 // 2. Collect streaming text chunks directly as Flow<String> (with optional image)
@@ -197,7 +257,11 @@ class ChatViewModel : ViewModel() {
                         if (isFirstChunk) {
                             isFirstChunk = false
                             // First token received: dismiss the thinking spinner and append the AI bubble
-                            val aiMessage = ChatMessage(role = "ai", text = accumulatedText)
+                            val aiMessage = ChatMessage(
+                                role = "ai",
+                                text = accumulatedText,
+                                timestamp = System.currentTimeMillis()
+                            )
                             _uiState.update { current ->
                                 current.copy(
                                     messages = current.messages + aiMessage,
@@ -220,13 +284,29 @@ class ChatViewModel : ViewModel() {
                 if (isFirstChunk) {
                     val emptyNotice = ChatMessage(
                         role = "ai",
-                        text = "Sorry, I received an empty response. Please try again."
+                        text = "Sorry, I received an empty response. Please try again.",
+                        timestamp = System.currentTimeMillis()
                     )
                     _uiState.update { current ->
                         current.copy(
                             messages = current.messages + emptyNotice,
                             isLoading = false
                         )
+                    }
+                } else {
+                    // 3. Save final AI message to Firestore
+                    val finalAiText = responseBuilder.toString()
+                    if (finalAiText.isNotBlank() && uid != null && activeSessionId != null) {
+                        try {
+                            val finalAiMessage = ChatMessage(
+                                role = "ai",
+                                text = finalAiText,
+                                timestamp = System.currentTimeMillis()
+                            )
+                            repository.saveMessage(uid, activeSessionId, finalAiMessage)
+                        } catch (e: Exception) {
+                            Log.e("ChatViewModel", "Failed to save AI message to Firestore", e)
+                        }
                     }
                 }
 

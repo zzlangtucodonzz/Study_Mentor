@@ -22,10 +22,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -96,6 +98,12 @@ fun CameraScannerScreen(
     val uiState by chatViewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
+    // Clear active chat session when pressing the system back button
+    BackHandler {
+        chatViewModel.startNewChat()
+        onBackClick()
+    }
+
     // Temporary URI holding the target file for camera capture
     var currentCameraUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -134,7 +142,12 @@ fun CameraScannerScreen(
                 .padding(top = 16.dp, start = 8.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = {
+                    chatViewModel.startNewChat()
+                    onBackClick()
+                }
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
@@ -147,6 +160,18 @@ fun CameraScannerScreen(
                 style = MaterialTheme.typography.titleLarge,
                 color = Color.White
             )
+            Spacer(modifier = Modifier.weight(1f))
+            IconButton(
+                onClick = {
+                    chatViewModel.startNewChat()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "New Chat",
+                    tint = Color.White
+                )
+            }
         }
 
         // ── Camera Bounding Box (only shown when chat is empty) ────────────
