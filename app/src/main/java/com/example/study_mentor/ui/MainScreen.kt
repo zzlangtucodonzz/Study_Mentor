@@ -66,13 +66,41 @@ fun MainScreen(
             startDestination = "home",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("home") { HomeScreen() }
+
+            composable("home") {
+                HomeScreen(
+                    onNavigateToLogin = {
+                        navController.navigate("login")
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate("register")
+                    },
+                    onNavigateToAskAI = {
+                        navController.navigate("ask_ai")
+                    },
+                    onQuestionSelected = { question ->
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("suggested_question", question)
+
+                        navController.navigate("ask_ai")
+                    }
+                )
+            }
             composable("practice") { PracticeScreen() }
-            composable("ask_ai") { 
+
+            composable("ask_ai") { backStackEntry ->
+                val previousEntry = navController.previousBackStackEntry
+
+                val suggestedQuestion =
+                    previousEntry?.savedStateHandle
+                        ?.get<String>("suggested_question") ?: ""
+
                 CameraScannerScreen(
                     onBackClick = { navController.popBackStack() },
-                    chatViewModel = chatViewModel
-                ) 
+                    chatViewModel = chatViewModel,
+                    initialQuestion = suggestedQuestion
+                )
             }
             composable("library") { 
                 LibraryScreen(

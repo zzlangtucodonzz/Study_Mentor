@@ -1,216 +1,373 @@
-package com.example.study_mentor.ui
 
+package com.example.study_mentor.ui
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.study_mentor.ui.theme.BackgroundOffWhite
 import com.example.study_mentor.ui.theme.PrimaryBlue
 
+private val DarkText = Color(0xFF17233B)
+private val MutedText = Color(0xFF718096)
+private val SoftBlue = Color(0xFFEAF1FF)
+
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onNavigateToLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToAskAI: () -> Unit,
+    onQuestionSelected: (String) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundOffWhite)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        // Top Row: Greeting & Sign In
+        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Hello, Learner! \uD83D\uDC4B",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            OutlinedButton(onClick = { /* TODO */ }) {
-                Text("Sign In")
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Hello, Learner! 👋",
+                    fontSize = 23.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkText
+                )
+                Spacer(Modifier.height(5.dp))
+                Text(
+                    "Ready to learn something new?",
+                    fontSize = 13.sp,
+                    color = MutedText
+                )
+            }
+
+            OutlinedButton(
+                onClick = onNavigateToLogin,
+                shape = RoundedCornerShape(14.dp),
+                contentPadding = PaddingValues(
+                    horizontal = 14.dp,
+                    vertical = 8.dp
+                )
+            ) {
+                Text("Sign In", fontSize = 12.sp)
             }
         }
 
-        // Promo Card
+        // Welcome Banner
         Card(
-            shape = MaterialTheme.shapes.medium, // Uses the 12.dp from Shape.kt
-            colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = PrimaryBlue
+            ),
+            elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(22.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                Surface(
+                    color = Color.White.copy(alpha = 0.18f),
+                    shape = RoundedCornerShape(50.dp)
+                ) {
+                    Text(
+                        "✦ YOUR AI STUDY PARTNER",
+                        modifier = Modifier.padding(
+                            horizontal = 12.dp,
+                            vertical = 7.dp
+                        ),
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+
                 Text(
-                    text = "Track your progress for free: Sign up to save answers, earn XP, and unlock quizzes.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White
+                    text = "Learn smarter,\nnot harder.",
+                    fontSize = 22.sp,
+                    lineHeight = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
+
+                Text(
+                    "Save answers, track progress and unlock more learning opportunities.",
+                    fontSize = 13.sp,
+                    lineHeight = 20.sp,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+
                 Button(
-                    onClick = { /* TODO */ },
+                    onClick = onNavigateToRegister,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White, 
+                        containerColor = Color.White,
                         contentColor = PrimaryBlue
                     ),
-                    shape = MaterialTheme.shapes.small
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Create free account", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
-        // Input Placeholder
-        Card(
-            shape = MaterialTheme.shapes.medium,
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { /* TODO open search or Ask AI */ }
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Ask anything about your homework...",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray,
-                        maxLines = 1
+                        "Get Started Free",
+                        fontWeight = FontWeight.Bold
                     )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = { /* TODO */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text("Ask")
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(17.dp)
+                    )
                 }
             }
         }
 
-        // List Section
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Ask AI section
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                text = "Try asking these",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground
+                "What would you like to learn?",
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkText
             )
 
-            // List of questions
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigateToAskAI() },
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(3.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        tint = PrimaryBlue
+                    )
+                    Spacer(Modifier.width(10.dp))
+
+                    Text(
+                        "Ask anything about your homework...",
+                        modifier = Modifier.weight(1f),
+                        color = MutedText,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Button(
+                        onClick = onNavigateToAskAI,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryBlue
+                        ),
+                        contentPadding = PaddingValues(
+                            horizontal = 15.dp,
+                            vertical = 8.dp
+                        )
+                    ) {
+                        Text("Ask", fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+
+        // Suggested questions
+        Column(verticalArrangement = Arrangement.spacedBy(13.dp)) {
+            Text(
+                "Explore popular questions",
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkText
+            )
+
+            Text(
+                "Tap a question to start learning with AI",
+                fontSize = 12.sp,
+                color = MutedText
+            )
+
             QuestionCard(
                 question = "How do I solve quadratic equations?",
                 icon = Icons.Outlined.Create,
-                tag = "Math"
+                tag = "Mathematics",
+                onClick = {
+                    onQuestionSelected("How do I solve quadratic equations?")
+                }
             )
+
             QuestionCard(
                 question = "What is the mitochondria?",
                 icon = Icons.Outlined.Info,
-                tag = "Science"
+                tag = "Science",
+                onClick = {
+                    onQuestionSelected("What is the mitochondria?")
+                }
             )
+
             QuestionCard(
                 question = "Explain the French Revolution",
                 icon = Icons.Outlined.Search,
-                tag = "History"
+                tag = "History",
+                onClick = {
+                    onQuestionSelected("Explain the French Revolution")
+                }
             )
         }
-        
-        // Extra padding at the bottom so the FAB doesn't obscure content
-        Spacer(modifier = Modifier.height(80.dp))
+
+        // Extra feature card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToAskAI() },
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = SoftBlue
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Star,
+                    contentDescription = null,
+                    tint = PrimaryBlue,
+                    modifier = Modifier.size(30.dp)
+                )
+
+                Spacer(Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Your personal AI tutor",
+                        fontWeight = FontWeight.Bold,
+                        color = DarkText
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Get explanations and step-by-step help.",
+                        fontSize = 12.sp,
+                        color = MutedText
+                    )
+                }
+
+                Icon(
+                    Icons.Default.ArrowForward,
+                    contentDescription = "Open Ask AI",
+                    tint = PrimaryBlue
+                )
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
     }
 }
 
 @Composable
-fun QuestionCard(question: String, icon: ImageVector, tag: String) {
+fun QuestionCard(
+    question: String,
+    icon: ImageVector,
+    tag: String,
+    onClick: () -> Unit
+) {
     Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* TODO open Ask AI with this question */ }
+            .clickable { onClick() },
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = PrimaryBlue,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .background(SoftBlue, RoundedCornerShape(14.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = PrimaryBlue,
+                    modifier = Modifier.size(23.dp)
+                )
+            }
+
+            Spacer(Modifier.width(13.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
                 Text(
                     text = question,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = DarkText
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                // Tag Pill
+
                 Surface(
-                    color = BackgroundOffWhite,
-                    shape = RoundedCornerShape(16.dp)
+                    color = SoftBlue,
+                    shape = CircleShape
                 ) {
                     Text(
                         text = tag,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(
+                            horizontal = 10.dp,
+                            vertical = 4.dp
+                        ),
+                        fontSize = 10.sp,
+                        color = PrimaryBlue,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
+
+            Icon(
+                Icons.Default.ArrowForward,
+                contentDescription = null,
+                tint = MutedText,
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }
