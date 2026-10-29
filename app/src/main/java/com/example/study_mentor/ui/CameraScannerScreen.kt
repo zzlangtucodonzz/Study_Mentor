@@ -88,11 +88,13 @@ fun createImageUri(context: Context): Uri {
 
 // ─── Main Screen Composable ─────────────────────────────────────────────────
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraScannerScreen(
     onBackClick: () -> Unit,
-    chatViewModel: ChatViewModel = viewModel()
+    chatViewModel: ChatViewModel = viewModel(),
+    initialQuestion: String = ""
 ) {
     val context = LocalContext.current
     val uiState by chatViewModel.uiState.collectAsState()
@@ -286,8 +288,10 @@ fun CameraScannerScreen(
                 }
 
                 // ── Input Row ─────────────────────────────────────────────
-                var text by remember { mutableStateOf("") }
 
+                var text by remember(initialQuestion) {
+                    mutableStateOf(initialQuestion)
+                }
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
